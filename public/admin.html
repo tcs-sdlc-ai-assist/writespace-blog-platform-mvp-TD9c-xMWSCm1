@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard — WriteSpace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <div id="nav-container"></div>
+
+    <main class="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+                <p class="mt-1 text-sm text-gray-500">Overview of your WriteSpace platform</p>
+            </div>
+            <a href="/admin-users.html" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-md hover:bg-amber-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                </svg>
+                Manage Users
+            </a>
+        </div>
+
+        <div id="error-container"></div>
+
+        <div id="loading" class="flex items-center justify-center py-16">
+            <div class="text-gray-500 text-sm">Loading dashboard...</div>
+        </div>
+
+        <div id="dashboard-content" class="hidden">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-500">Total Posts</p>
+                            <p id="stat-posts" class="text-2xl font-bold text-gray-900">—</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-500">Total Users</p>
+                            <p id="stat-users" class="text-2xl font-bold text-gray-900">—</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-amber-100 rounded-md p-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-amber-600" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 2a1 1 0 01.832.445l2.084 3.126 3.584.836a1 1 0 01.52 1.598L14.5 10.88l.54 3.67a1 1 0 01-1.46 1.04L10 13.625l-3.58 1.965a1 1 0 01-1.46-1.04l.54-3.67L2.98 8.005a1 1 0 01.52-1.598l3.584-.836L9.168 2.445A1 1 0 0110 2z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-500">Total Admins</p>
+                            <p id="stat-admins" class="text-2xl font-bold text-gray-900">—</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Recent Posts</h2>
+                </div>
+                <div id="recent-posts-list" class="divide-y divide-gray-200">
+                    <div class="px-6 py-4 text-sm text-gray-500">No recent posts.</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-sm text-gray-500">
+            &copy; 2024 WriteSpace. All rights reserved.
+        </div>
+    </footer>
+
+    <script src="/js/app.js"></script>
+    <script>
+        (function () {
+            var user = requireAdmin();
+            if (!user) return;
+
+            var navContainer = document.getElementById('nav-container');
+            navContainer.appendChild(createNav());
+
+            loadDashboard();
+
+            async function loadDashboard() {
+                var loading = document.getElementById('loading');
+                var content = document.getElementById('dashboard-content');
+                var errorContainer = document.getElementById('error-container');
+
+                try {
+                    var result = await apiRequest('/admin/stats');
+                    var stats = result.data;
+
+                    document.getElementById('stat-posts').textContent = stats.total_posts;
+                    document.getElementById('stat-users').textContent = stats.total_users;
+                    document.getElementById('stat-admins').textContent = stats.total_admins;
+
+                    renderRecentPosts(stats.recent_posts);
+
+                    loading.classList.add('hidden');
+                    content.classList.remove('hidden');
+                } catch (err) {
+                    loading.classList.add('hidden');
+                    showError(errorContainer, err.message || 'Failed to load dashboard stats');
+                }
+            }
+
+            function renderRecentPosts(posts) {
+                var container = document.getElementById('recent-posts-list');
+                container.innerHTML = '';
+
+                if (!posts || posts.length === 0) {
+                    var empty = document.createElement('div');
+                    empty.className = 'px-6 py-8 text-center text-sm text-gray-500';
+                    empty.textContent = 'No posts yet. Create your first post!';
+                    container.appendChild(empty);
+                    return;
+                }
+
+                for (var i = 0; i < posts.length; i++) {
+                    var post = posts[i];
+                    var row = document.createElement('a');
+                    row.href = '/post.html?id=' + post.id;
+                    row.className = 'flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors';
+
+                    var info = document.createElement('div');
+                    info.className = 'min-w-0 flex-1';
+
+                    var title = document.createElement('p');
+                    title.className = 'text-sm font-medium text-gray-900 truncate';
+                    title.textContent = post.title;
+                    info.appendChild(title);
+
+                    var date = document.createElement('p');
+                    date.className = 'text-xs text-gray-500 mt-0.5';
+                    date.textContent = formatDate(post.created_at);
+                    info.appendChild(date);
+
+                    row.appendChild(info);
+
+                    var arrow = document.createElement('div');
+                    arrow.className = 'ml-4 flex-shrink-0 text-gray-400';
+                    arrow.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>';
+                    row.appendChild(arrow);
+
+                    container.appendChild(row);
+                }
+            }
+        })();
+    </script>
+</body>
+</html>

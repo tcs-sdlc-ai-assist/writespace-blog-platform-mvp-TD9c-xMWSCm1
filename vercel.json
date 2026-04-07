@@ -1,0 +1,23 @@
+{
+  "framework": null,
+  "builds": [
+    {
+      "src": "api/main.rs",
+      "use": "@vercel/rust"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "api/main.rs"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "public/$1"
+    }
+  ]
+}

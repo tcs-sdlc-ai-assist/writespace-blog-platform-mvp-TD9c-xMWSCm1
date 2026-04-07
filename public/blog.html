@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Post — WriteSpace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <div id="nav-container"></div>
+
+    <main class="flex-1 max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+        <div id="loading" class="flex items-center justify-center py-20">
+            <div class="text-gray-500 text-sm">Loading post...</div>
+        </div>
+
+        <div id="error-container" class="hidden">
+            <div class="text-center py-20">
+                <h2 id="error-title" class="text-2xl font-bold text-gray-900 mb-2">Post not found</h2>
+                <p id="error-message" class="text-gray-500 mb-6">The post you're looking for doesn't exist or has been removed.</p>
+                <a href="/posts.html" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
+                    ← Back to Posts
+                </a>
+            </div>
+        </div>
+
+        <div id="post-container" class="hidden">
+            <div class="mb-6">
+                <a href="/posts.html" class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Back to Posts
+                </a>
+            </div>
+
+            <article class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div class="p-6 sm:p-8">
+                    <h1 id="post-title" class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4"></h1>
+
+                    <div class="flex items-center justify-between flex-wrap gap-4 mb-6 pb-6 border-b border-gray-200">
+                        <div class="flex items-center space-x-3">
+                            <div id="post-avatar"></div>
+                            <div>
+                                <div id="post-author-name" class="text-sm font-medium text-gray-900"></div>
+                                <div id="post-date" class="text-xs text-gray-500"></div>
+                            </div>
+                        </div>
+
+                        <div id="post-actions" class="hidden flex items-center space-x-2">
+                            <button id="edit-btn" class="hidden inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                Edit
+                            </button>
+                            <button id="delete-btn" class="hidden inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 rounded-md hover:bg-red-100 transition-colors cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="post-content" class="prose prose-gray max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap"></div>
+                </div>
+            </article>
+        </div>
+
+        <div id="delete-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+            <div class="fixed inset-0 bg-black bg-opacity-50" id="delete-modal-overlay"></div>
+            <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Delete Post</h3>
+                <p class="text-sm text-gray-600 mb-6">Are you sure you want to delete this post? This action cannot be undone.</p>
+                <div class="flex justify-end space-x-3">
+                    <button id="delete-cancel-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors cursor-pointer">
+                        Cancel
+                    </button>
+                    <button id="delete-confirm-btn" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors cursor-pointer">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 py-6 mt-auto">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
+            &copy; 2024 WriteSpace. All rights reserved.
+        </div>
+    </footer>
+
+    <script src="/js/app.js"></script>
+    <script>
+        (function () {
+            var navContainer = document.getElementById('nav-container');
+            navContainer.appendChild(createNav());
+
+            var params = new URLSearchParams(window.location.search);
+            var postId = params.get('id');
+
+            var loadingEl = document.getElementById('loading');
+            var errorContainer = document.getElementById('error-container');
+            var postContainer = document.getElementById('post-container');
+            var errorTitle = document.getElementById('error-title');
+            var errorMessage = document.getElementById('error-message');
+
+            if (!postId) {
+                loadingEl.classList.add('hidden');
+                errorTitle.textContent = 'No post specified';
+                errorMessage.textContent = 'Please provide a valid post ID in the URL.';
+                errorContainer.classList.remove('hidden');
+                return;
+            }
+
+            loadPost(postId);
+
+            async function loadPost(id) {
+                try {
+                    var result = await apiRequest('/posts/' + id);
+                    var post = result.data;
+
+                    document.title = post.title + ' — WriteSpace';
+
+                    document.getElementById('post-title').textContent = post.title;
+                    document.getElementById('post-content').textContent = post.content;
+                    document.getElementById('post-date').textContent = formatDate(post.created_at);
+                    document.getElementById('post-author-name').textContent = post.author.display_name;
+
+                    var avatarContainer = document.getElementById('post-avatar');
+                    var avatar = createAvatar(post.author.display_name, post.author.role);
+                    avatarContainer.appendChild(avatar);
+
+                    if (post.can_edit || post.can_delete) {
+                        var actionsEl = document.getElementById('post-actions');
+                        actionsEl.classList.remove('hidden');
+
+                        if (post.can_edit) {
+                            var editBtn = document.getElementById('edit-btn');
+                            editBtn.classList.remove('hidden');
+                            editBtn.addEventListener('click', function () {
+                                window.location.href = '/edit-post.html?id=' + post.id;
+                            });
+                        }
+
+                        if (post.can_delete) {
+                            var deleteBtn = document.getElementById('delete-btn');
+                            deleteBtn.classList.remove('hidden');
+                            deleteBtn.addEventListener('click', function () {
+                                openDeleteModal(post.id);
+                            });
+                        }
+                    }
+
+                    loadingEl.classList.add('hidden');
+                    postContainer.classList.remove('hidden');
+                } catch (err) {
+                    loadingEl.classList.add('hidden');
+
+                    if (err.status === 404) {
+                        errorTitle.textContent = 'Post not found';
+                        errorMessage.textContent = 'The post you\'re looking for doesn\'t exist or has been removed.';
+                    } else if (err.status === 401) {
+                        errorTitle.textContent = 'Unauthorized';
+                        errorMessage.textContent = 'You need to be logged in to view this post.';
+                    } else {
+                        errorTitle.textContent = 'Error loading post';
+                        errorMessage.textContent = err.message || 'An unexpected error occurred. Please try again later.';
+                    }
+
+                    errorContainer.classList.remove('hidden');
+                }
+            }
+
+            function openDeleteModal(id) {
+                var modal = document.getElementById('delete-modal');
+                modal.classList.remove('hidden');
+
+                var overlay = document.getElementById('delete-modal-overlay');
+                var cancelBtn = document.getElementById('delete-cancel-btn');
+                var confirmBtn = document.getElementById('delete-confirm-btn');
+
+                function closeModal() {
+                    modal.classList.add('hidden');
+                    overlay.removeEventListener('click', closeModal);
+                    cancelBtn.removeEventListener('click', closeModal);
+                    confirmBtn.removeEventListener('click', handleDelete);
+                }
+
+                async function handleDelete() {
+                    confirmBtn.disabled = true;
+                    confirmBtn.textContent = 'Deleting...';
+
+                    try {
+                        await apiRequest('/posts/' + id, { method: 'DELETE' });
+                        closeModal();
+                        window.location.href = '/posts.html';
+                    } catch (err) {
+                        closeModal();
+                        var main = document.querySelector('main');
+                        showError(main, err.message || 'Failed to delete post.');
+                        confirmBtn.disabled = false;
+                        confirmBtn.textContent = 'Delete';
+                    }
+                }
+
+                overlay.addEventListener('click', closeModal);
+                cancelBtn.addEventListener('click', closeModal);
+                confirmBtn.addEventListener('click', handleDelete);
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Management - WriteSpace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div id="nav-container"></div>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">User Management</h1>
+                <p class="mt-1 text-sm text-gray-500">Manage users and their roles</p>
+            </div>
+            <button id="open-create-modal-btn" class="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                </svg>
+                Create User
+            </button>
+        </div>
+
+        <div id="messages-container"></div>
+
+        <div id="loading-indicator" class="flex items-center justify-center py-12">
+            <svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            <span class="ml-3 text-gray-500">Loading users...</span>
+        </div>
+
+        <div id="users-container" class="hidden">
+            <!-- Desktop table -->
+            <div class="hidden md:block bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body" class="bg-white divide-y divide-gray-200">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile cards -->
+            <div id="users-cards-container" class="md:hidden space-y-4">
+            </div>
+        </div>
+
+        <div id="empty-state" class="hidden text-center py-12">
+            <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No users found</h3>
+            <p class="mt-1 text-sm text-gray-500">Get started by creating a new user.</p>
+        </div>
+    </main>
+
+    <!-- Create User Modal -->
+    <div id="create-user-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+            <div id="modal-backdrop" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+            <div class="relative bg-white rounded-lg shadow-xl transform transition-all sm:max-w-lg sm:w-full mx-auto">
+                <div class="px-6 py-5 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-medium text-gray-900">Create New User</h3>
+                        <button id="close-modal-btn" class="text-gray-400 hover:text-gray-500 cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <form id="create-user-form" class="px-6 py-5 space-y-4">
+                    <div id="modal-messages-container"></div>
+
+                    <div>
+                        <label for="display_name" class="block text-sm font-medium text-gray-700">Display Name</label>
+                        <input type="text" id="display_name" name="display_name" required minlength="1" maxlength="100"
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                            placeholder="Jane Doe" />
+                    </div>
+
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                        <input type="text" id="username" name="username" required minlength="3" maxlength="50"
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                            placeholder="janedoe" />
+                        <p class="mt-1 text-xs text-gray-500">3-50 characters, alphanumeric, underscores, or hyphens</p>
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" id="password" name="password" required minlength="8"
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                            placeholder="Minimum 8 characters" />
+                        <p class="mt-1 text-xs text-gray-500">Must be at least 8 characters</p>
+                    </div>
+
+                    <div>
+                        <label for="role" class="block text-sm font-medium text-gray-700">Role</label>
+                        <select id="role" name="role" required
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none">
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                        <button type="button" id="cancel-modal-btn"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer">
+                            Cancel
+                        </button>
+                        <button type="submit" id="submit-create-btn"
+                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                            Create User
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-confirm-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+            <div id="delete-modal-backdrop" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+            <div class="relative bg-white rounded-lg shadow-xl transform transition-all sm:max-w-md sm:w-full mx-auto">
+                <div class="px-6 py-5">
+                    <div class="flex items-center space-x-3">
+                        <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-red-100">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                            </svg>
+                        </div>
+                        <div class="text-left">
+                            <h3 class="text-lg font-medium text-gray-900">Delete User</h3>
+                            <p class="mt-1 text-sm text-gray-500">Are you sure you want to delete <span id="delete-user-name" class="font-semibold"></span>? This action cannot be undone. All their posts will also be deleted.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-6 py-4 bg-gray-50 rounded-b-lg flex justify-end space-x-3">
+                    <button type="button" id="cancel-delete-btn"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="button" id="confirm-delete-btn"
+                        class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        (function () {
+            var currentUser = requireAdmin();
+            if (!currentUser) return;
+
+            var navContainer = document.getElementById('nav-container');
+            navContainer.appendChild(createNav());
+
+            var loadingIndicator = document.getElementById('loading-indicator');
+            var usersContainer = document.getElementById('users-container');
+            var usersTableBody = document.getElementById('users-table-body');
+            var usersCardsContainer = document.getElementById('users-cards-container');
+            var emptyState = document.getElementById('empty-state');
+            var messagesContainer = document.getElementById('messages-container');
+            var modalMessagesContainer = document.getElementById('modal-messages-container');
+
+            var createUserModal = document.getElementById('create-user-modal');
+            var createUserForm = document.getElementById('create-user-form');
+            var openCreateModalBtn = document.getElementById('open-create-modal-btn');
+            var closeModalBtn = document.getElementById('close-modal-btn');
+            var cancelModalBtn = document.getElementById('cancel-modal-btn');
+            var modalBackdrop = document.getElementById('modal-backdrop');
+            var submitCreateBtn = document.getElementById('submit-create-btn');
+
+            var deleteConfirmModal = document.getElementById('delete-confirm-modal');
+            var deleteModalBackdrop = document.getElementById('delete-modal-backdrop');
+            var deleteUserNameSpan = document.getElementById('delete-user-name');
+            var cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+            var confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+
+            var pendingDeleteUserId = null;
+            var users = [];
+
+            function openCreateModal() {
+                createUserForm.reset();
+                modalMessagesContainer.innerHTML = '';
+                createUserModal.classList.remove('hidden');
+            }
+
+            function closeCreateModal() {
+                createUserModal.classList.add('hidden');
+                createUserForm.reset();
+                modalMessagesContainer.innerHTML = '';
+            }
+
+            function openDeleteModal(userId, displayName) {
+                pendingDeleteUserId = userId;
+                deleteUserNameSpan.textContent = displayName;
+                deleteConfirmModal.classList.remove('hidden');
+            }
+
+            function closeDeleteModal() {
+                deleteConfirmModal.classList.add('hidden');
+                pendingDeleteUserId = null;
+            }
+
+            openCreateModalBtn.addEventListener('click', openCreateModal);
+            closeModalBtn.addEventListener('click', closeCreateModal);
+            cancelModalBtn.addEventListener('click', closeCreateModal);
+            modalBackdrop.addEventListener('click', closeCreateModal);
+
+            cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+            deleteModalBackdrop.addEventListener('click', closeDeleteModal);
+
+            function createRoleBadge(role) {
+                var badge = document.createElement('span');
+                if (role === 'admin') {
+                    badge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200';
+                    badge.textContent = 'Admin';
+                } else {
+                    badge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200';
+                    badge.textContent = 'User';
+                }
+                return badge;
+            }
+
+            function isDeleteDisabled(user) {
+                return user.is_default_admin || user.id === currentUser.id;
+            }
+
+            function renderUsersTable() {
+                usersTableBody.innerHTML = '';
+
+                users.forEach(function (user) {
+                    var tr = document.createElement('tr');
+                    tr.className = 'hover:bg-gray-50 transition-colors';
+
+                    // User cell (avatar + display name)
+                    var tdUser = document.createElement('td');
+                    tdUser.className = 'px-6 py-4 whitespace-nowrap';
+                    var userFlex = document.createElement('div');
+                    userFlex.className = 'flex items-center space-x-3';
+                    var avatar = createAvatar(user.display_name, user.role);
+                    userFlex.appendChild(avatar);
+                    var nameDiv = document.createElement('div');
+                    var nameSpan = document.createElement('div');
+                    nameSpan.className = 'text-sm font-medium text-gray-900';
+                    nameSpan.textContent = user.display_name;
+                    nameDiv.appendChild(nameSpan);
+                    if (user.is_default_admin) {
+                        var defaultBadge = document.createElement('span');
+                        defaultBadge.className = 'text-xs text-gray-400';
+                        defaultBadge.textContent = 'Default Admin';
+                        nameDiv.appendChild(defaultBadge);
+                    }
+                    userFlex.appendChild(nameDiv);
+                    tdUser.appendChild(userFlex);
+                    tr.appendChild(tdUser);
+
+                    // Username cell
+                    var tdUsername = document.createElement('td');
+                    tdUsername.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500';
+                    tdUsername.textContent = user.username;
+                    tr.appendChild(tdUsername);
+
+                    // Role cell
+                    var tdRole = document.createElement('td');
+                    tdRole.className = 'px-6 py-4 whitespace-nowrap';
+                    tdRole.appendChild(createRoleBadge(user.role));
+                    tr.appendChild(tdRole);
+
+                    // Joined cell
+                    var tdJoined = document.createElement('td');
+                    tdJoined.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500';
+                    tdJoined.textContent = formatDate(user.created_at);
+                    tr.appendChild(tdJoined);
+
+                    // Actions cell
+                    var tdActions = document.createElement('td');
+                    tdActions.className = 'px-6 py-4 whitespace-nowrap text-right';
+
+                    var disabled = isDeleteDisabled(user);
+                    var deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer';
+                    if (disabled) {
+                        deleteBtn.className += ' text-gray-300 cursor-not-allowed';
+                        deleteBtn.disabled = true;
+                        deleteBtn.title = user.is_default_admin ? 'Cannot delete default admin' : 'Cannot delete yourself';
+                    } else {
+                        deleteBtn.className += ' text-red-600 hover:text-red-800 hover:bg-red-50';
+                        deleteBtn.addEventListener('click', (function (u) {
+                            return function () {
+                                openDeleteModal(u.id, u.display_name);
+                            };
+                        })(user));
+                    }
+                    deleteBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>Delete';
+                    tdActions.appendChild(deleteBtn);
+                    tr.appendChild(tdActions);
+
+                    usersTableBody.appendChild(tr);
+                });
+            }
+
+            function renderUsersCards() {
+                usersCardsContainer.innerHTML = '';
+
+                users.forEach(function (user) {
+                    var card = document.createElement('div');
+                    card.className = 'bg-white shadow-sm rounded-lg border border-gray-200 p-4';
+
+                    var topRow = document.createElement('div');
+                    topRow.className = 'flex items-center justify-between';
+
+                    var userInfo = document.createElement('div');
+                    userInfo.className = 'flex items-center space-x-3';
+                    var avatar = createAvatar(user.display_name, user.role);
+                    userInfo.appendChild(avatar);
+
+                    var nameBlock = document.createElement('div');
+                    var nameSpan = document.createElement('div');
+                    nameSpan.className = 'text-sm font-medium text-gray-900';
+                    nameSpan.textContent = user.display_name;
+                    nameBlock.appendChild(nameSpan);
+
+                    var usernameSpan = document.createElement('div');
+                    usernameSpan.className = 'text-xs text-gray-500';
+                    usernameSpan.textContent = '@' + user.username;
+                    nameBlock.appendChild(usernameSpan);
+
+                    userInfo.appendChild(nameBlock);
+                    topRow.appendChild(userInfo);
+
+                    topRow.appendChild(createRoleBadge(user.role));
+                    card.appendChild(topRow);
+
+                    var metaRow = document.createElement('div');
+                    metaRow.className = 'mt-3 flex items-center justify-between text-xs text-gray-500';
+
+                    var joinedSpan = document.createElement('span');
+                    joinedSpan.textContent = 'Joined ' + formatDate(user.created_at);
+                    metaRow.appendChild(joinedSpan);
+
+                    if (user.is_default_admin) {
+                        var defaultBadge = document.createElement('span');
+                        defaultBadge.className = 'text-xs text-gray-400 italic';
+                        defaultBadge.textContent = 'Default Admin';
+                        metaRow.appendChild(defaultBadge);
+                    }
+
+                    card.appendChild(metaRow);
+
+                    var disabled = isDeleteDisabled(user);
+                    var actionsRow = document.createElement('div');
+                    actionsRow.className = 'mt-3 pt-3 border-t border-gray-100 flex justify-end';
+
+                    var deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer';
+                    if (disabled) {
+                        deleteBtn.className += ' text-gray-300 cursor-not-allowed';
+                        deleteBtn.disabled = true;
+                        deleteBtn.title = user.is_default_admin ? 'Cannot delete default admin' : 'Cannot delete yourself';
+                    } else {
+                        deleteBtn.className += ' text-red-600 hover:text-red-800 hover:bg-red-50';
+                        deleteBtn.addEventListener('click', (function (u) {
+                            return function () {
+                                openDeleteModal(u.id, u.display_name);
+                            };
+                        })(user));
+                    }
+                    deleteBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>Delete';
+                    actionsRow.appendChild(deleteBtn);
+                    card.appendChild(actionsRow);
+
+                    usersCardsContainer.appendChild(card);
+                });
+            }
+
+            function renderUsers() {
+                if (users.length === 0) {
+                    usersContainer.classList.add('hidden');
+                    emptyState.classList.remove('hidden');
+                } else {
+                    emptyState.classList.add('hidden');
+                    usersContainer.classList.remove('hidden');
+                    renderUsersTable();
+                    renderUsersCards();
+                }
+            }
+
+            async function fetchUsers() {
+                loadingIndicator.classList.remove('hidden');
+                usersContainer.classList.add('hidden');
+                emptyState.classList.add('hidden');
+
+                try {
+                    var result = await apiRequest('/admin/users');
+                    users = result.data || [];
+                    renderUsers();
+                } catch (err) {
+                    showError(messagesContainer, err.message || 'Failed to load users');
+                } finally {
+                    loadingIndicator.classList.add('hidden');
+                }
+            }
+
+            createUserForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                modalMessagesContainer.innerHTML = '';
+
+                var displayName = document.getElementById('display_name').value.trim();
+                var username = document.getElementById('username').value.trim();
+                var password = document.getElementById('password').value;
+                var role = document.getElementById('role').value;
+
+                if (!displayName || !username || !password || !role) {
+                    showError(modalMessagesContainer, 'All fields are required');
+                    return;
+                }
+
+                if (username.length < 3 || username.length > 50) {
+                    showError(modalMessagesContainer, 'Username must be between 3 and 50 characters');
+                    return;
+                }
+
+                if (password.length < 8) {
+                    showError(modalMessagesContainer, 'Password must be at least 8 characters');
+                    return;
+                }
+
+                submitCreateBtn.disabled = true;
+                submitCreateBtn.textContent = 'Creating...';
+
+                try {
+                    await apiRequest('/admin/users', {
+                        method: 'POST',
+                        body: {
+                            display_name: displayName,
+                            username: username,
+                            password: password,
+                            role: role,
+                        },
+                    });
+
+                    closeCreateModal();
+                    showSuccess(messagesContainer, 'User "' + username + '" created successfully');
+                    await fetchUsers();
+                } catch (err) {
+                    showError(modalMessagesContainer, err.message || 'Failed to create user');
+                } finally {
+                    submitCreateBtn.disabled = false;
+                    submitCreateBtn.textContent = 'Create User';
+                }
+            });
+
+            confirmDeleteBtn.addEventListener('click', async function () {
+                if (!pendingDeleteUserId) return;
+
+                confirmDeleteBtn.disabled = true;
+                confirmDeleteBtn.textContent = 'Deleting...';
+
+                try {
+                    await apiRequest('/admin/users/' + pendingDeleteUserId, {
+                        method: 'DELETE',
+                    });
+
+                    closeDeleteModal();
+                    showSuccess(messagesContainer, 'User deleted successfully');
+                    await fetchUsers();
+                } catch (err) {
+                    closeDeleteModal();
+                    showError(messagesContainer, err.message || 'Failed to delete user');
+                } finally {
+                    confirmDeleteBtn.disabled = false;
+                    confirmDeleteBtn.textContent = 'Delete';
+                }
+            });
+
+            fetchUsers();
+        })();
+    </script>
+</body>
+</html>
